@@ -1,7 +1,7 @@
-package convert
+package deserialize
 
 import com.github.jasoma.graft.access.ResultRow
-import com.github.jasoma.graft.convert.BeanPropertyDeserializer
+import com.github.jasoma.graft.deserialize.BeanPropertyDeserializer
 import infra.TestNode
 import models.CollectionPropertiesNode
 import models.SimplePropertiesNode

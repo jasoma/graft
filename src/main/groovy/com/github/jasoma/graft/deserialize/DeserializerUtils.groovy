@@ -1,4 +1,4 @@
-package com.github.jasoma.graft.convert
+package com.github.jasoma.graft.deserialize
 
 /**
  * Utility methods for mixing into {@link NodeDeserializer} implementations.

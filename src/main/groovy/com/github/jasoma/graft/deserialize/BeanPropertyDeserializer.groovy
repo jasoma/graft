@@ -1,4 +1,4 @@
-package com.github.jasoma.graft.convert
+package com.github.jasoma.graft.deserialize
 
 import com.github.jasoma.graft.access.NeoNode
 import com.github.jasoma.graft.access.ResultRow

@@ -1,4 +1,4 @@
-package com.github.jasoma.graft.convert;
+package com.github.jasoma.graft.deserialize;
 
 import com.github.jasoma.graft.access.NeoNode;
 import com.github.jasoma.graft.access.ResultRow;
@@ -11,8 +11,8 @@ interface NodeDeserializer {
     /**
      * Convert a node from the database, along with the result row it came from, into a local type.
      *
-     * @param type the type to convert the node to.
-     * @param node the node to convert.
+     * @param type the type to deserialize the node to.
+     * @param node the node to deserialize.
      * @param row the result row the node came from.
      * @return the created and populated type.
      * @throws NodeDeserializationException if the node cannot be deserialized.

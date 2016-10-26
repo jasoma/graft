@@ -1,4 +1,4 @@
-package com.github.jasoma.graft.convert;
+package com.github.jasoma.graft.deserialize;
 
 /**
  * Exception thrown when a database node cannot be converted into a local type.
