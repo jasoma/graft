@@ -1,0 +1,60 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'maven'
+}
+
+ext {
+    neoVersion = '3.0.4'
+}
+
+group 'com.github.jasoma'
+version "$neoVersion"
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: groovydoc) {
+    classifier = 'javadoc'
+    from groovydoc.destinationDir
+}
+
+artifacts {
+    archives sourcesJar
+    archives javadocJar
+}
+
+test {
+    testLogging {
+        events 'passed', 'skipped', 'failed'
+        exceptionFormat 'full'
+        showStandardStreams true
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+dependencies {
+    compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.7'
+    compile group: 'com.github.jasoma', name: 'graft-access', version: neoVersion
+    compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+
+    compileOnly group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.0.3'
+    compileOnly group: 'org.neo4j', name: 'neo4j-kernel', version: neoVersion
+    compileOnly group: 'com.github.jasoma', name: 'neo4j-memorydb', version: neoVersion
+
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+    testCompile group: 'com.github.jasoma', name: 'graft-test', version: neoVersion
+    testCompile group: 'org.slf4j', name: 'slf4j-simple', version: '1.7.21'
+    testCompile group: 'org.mockito', name: 'mockito-all', version: '1.10.19'
+
+    testCompile group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.0.3'
+    testCompile group: 'org.neo4j', name: 'neo4j-kernel', version: neoVersion
+    testCompile group: 'org.neo4j', name: 'neo4j-lucene-index', version: neoVersion
+    testCompile group: 'org.neo4j', name: 'neo4j-cypher', version: neoVersion
+}

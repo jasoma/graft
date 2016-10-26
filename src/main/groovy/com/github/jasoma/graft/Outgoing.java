@@ -1,0 +1,26 @@
+package com.github.jasoma.graft;
+
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+
+/**
+ * Marks a field or property as the outgoing end of a relationship. The type of the field must be a type annotated
+ * with {@link Node}.
+ */
+@Documented
+@Retention(RetentionPolicy.RUNTIME)
+@Target({ ElementType.FIELD, ElementType.METHOD })
+public @interface Outgoing {
+
+    /**
+     * The type of the relationship that links the two nodes. In cases where the property type is {@link Related} the
+     * type can be omitted as it can be determined from the property type.
+     *
+     * @return the type of the relationship linking the two nodes.
+     */
+    Class<?> value() default Outgoing.class;
+
+}
