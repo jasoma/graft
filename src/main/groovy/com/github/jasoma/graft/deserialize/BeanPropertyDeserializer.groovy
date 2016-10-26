@@ -1,19 +1,18 @@
 package com.github.jasoma.graft.deserialize
 
-import com.github.jasoma.graft.access.NeoNode
+import com.github.jasoma.graft.access.NeoEntity
 import com.github.jasoma.graft.access.ResultRow
 import org.apache.commons.beanutils.PropertyUtils
-
 /**
  * A basic deserializer implementation that directly sets values from the node onto a new instance of the target
  * type using JavaBeans naming conventions. Uses groovy casting via {@code asType} as the only type handling.
  */
-class BeanPropertyDeserializer implements NodeDeserializer {
+class BeanPropertyDeserializer implements EntityDeserializer {
 
     @Override
-    def <T> T convert(Class<T> type, NeoNode node, ResultRow row) throws NodeDeserializationException {
+    def <T> T convert(Class<T> type, NeoEntity entity, ResultRow row) throws EntityDeserializationException {
         def obj = type.newInstance()
-        node.properties().each { key, value ->
+        entity.properties().each { key, value ->
             if (value == null) {
                 return;
             }
@@ -22,7 +21,7 @@ class BeanPropertyDeserializer implements NodeDeserializer {
                     setProperty(obj, key, value, row)
                 }
                 catch (Exception ex) {
-                    throw new NodeDeserializationException("Error trying to set property $key on an instance of $type", ex)
+                    throw new EntityDeserializationException("Error trying to set property $key on an instance of $type", ex)
                 }
             }
         }

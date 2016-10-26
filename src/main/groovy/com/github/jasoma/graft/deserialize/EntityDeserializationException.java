@@ -1,16 +1,16 @@
 package com.github.jasoma.graft.deserialize;
 
 /**
- * Exception thrown when a database node cannot be converted into a local type.
+ * Exception thrown when a database entity cannot be converted into a local type.
  */
-public class NodeDeserializationException extends RuntimeException {
+public class EntityDeserializationException extends RuntimeException {
 
     /**
      * Constructor.
      *
      * @param message a message describing the error.
      */
-    public NodeDeserializationException(String message) {
+    public EntityDeserializationException(String message) {
         super(message);
     }
 
@@ -20,7 +20,7 @@ public class NodeDeserializationException extends RuntimeException {
      * @param message a message describing the error.
      * @param cause a root cause for the error.
      */
-    public NodeDeserializationException(String message, Throwable cause) {
+    public EntityDeserializationException(String message, Throwable cause) {
         super(message, cause);
     }
 }
