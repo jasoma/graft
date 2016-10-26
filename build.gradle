@@ -43,6 +43,7 @@ dependencies {
     compile group: 'org.codehaus.groovy', name: 'groovy-all', version: '2.4.7'
     compile group: 'com.github.jasoma', name: 'graft-access', version: neoVersion
     compile group: 'org.slf4j', name: 'slf4j-api', version: '1.7.21'
+    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.3'
 
     compileOnly group: 'org.neo4j.driver', name: 'neo4j-java-driver', version: '1.0.3'
     compileOnly group: 'org.neo4j', name: 'neo4j-kernel', version: neoVersion
