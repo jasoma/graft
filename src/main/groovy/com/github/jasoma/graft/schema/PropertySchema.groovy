@@ -5,10 +5,9 @@ import com.github.jasoma.graft.access.NeoEntity
 import com.github.jasoma.graft.convert.ConverterRegistry
 import com.github.jasoma.graft.convert.DefaultConverter
 import com.github.jasoma.graft.convert.PropertyConverter
+import com.github.jasoma.graft.internal.Reflection
 
 import java.beans.PropertyDescriptor
-import java.lang.reflect.Field
-
 /**
  * Contains the details of a class property and the converter for reading/writing that property to the database.
  */
@@ -31,7 +30,7 @@ class PropertySchema {
         this.propertyName = descriptor.name
         this.propertyType = descriptor.propertyType
 
-        for (def element : [descriptor.readMethod, descriptor.writeMethod, findField(containingClass, descriptor.name)]) {
+        for (def element : Reflection.annotationSources(containingClass, descriptor)) {
             def annotation = element?.getAnnotation(Using)
             if (annotation) {
                 converter = registry.get(annotation.value())
@@ -42,18 +41,6 @@ class PropertySchema {
         if (converter == null) {
             converter = DefaultConverter.INSTANCE
         }
-    }
-
-    private static Field findField(Class<?> type, String name) {
-        Class<?> current = type
-        while (current && current != Object) {
-            def field = current.declaredFields.find {it.name == name}
-            if (field) {
-                return field
-            }
-            current = current.superclass
-        }
-        return null
     }
 
     /**
