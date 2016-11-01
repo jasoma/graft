@@ -5,6 +5,7 @@ import com.github.jasoma.graft.access.NeoEntity
 import com.github.jasoma.graft.convert.ConcurrentMapRegistry
 import com.github.jasoma.graft.convert.ConverterRegistry
 import com.github.jasoma.graft.convert.PropertyConverter
+import groovy.transform.Canonical
 import infra.TestNode
 import org.apache.commons.beanutils.PropertyUtils
 import org.junit.Test
@@ -73,11 +74,60 @@ class PropertySchemaTest {
         assert converter.propertiesRead.removeFirst() == "baseSetter+setter"
     }
 
+    @Test
+    def void testWriteUsesDefaultConverter() {
+        def nameSchema = new PropertySchema(DefaultConverterBean, PropertyUtils.getPropertyDescriptor(new DefaultConverterBean(), "name"), registry)
+        def idSchema = new PropertySchema(DefaultConverterBean, PropertyUtils.getPropertyDescriptor(new DefaultConverterBean(), "id"), registry)
+
+        def entity = new TestNode()
+        def local = new DefaultConverterBean(name: "test", id: 2)
+
+        nameSchema.write(local, entity)
+        idSchema.write(local, entity)
+
+        assert entity.properties()["name"] == "test"
+        assert entity.properties()["id"] == 2
+    }
+
+    @Test
+    def void testWriteUsesCustomConverter() {
+        def fieldSchema = new PropertySchema(CustomConverterBean, PropertyUtils.getPropertyDescriptor(new CustomConverterBean(), "usingOnField"), registry)
+        def getterSchema = new PropertySchema(CustomConverterBean, PropertyUtils.getPropertyDescriptor(new CustomConverterBean(), "usingOnGetter"), registry)
+        def setterSchema = new PropertySchema(CustomConverterBean, PropertyUtils.getPropertyDescriptor(new CustomConverterBean(), "usingOnSetter"), registry)
+
+        def entity = new TestNode()
+        def local = new CustomConverterBean(usingOnField: 1, usingOnGetter: 2, usingOnSetter: 3)
+
+        [fieldSchema, getterSchema, setterSchema].each { it.write(local, entity) }
+
+        assert entity.properties()["usingOnField"] == "TEST+1"
+        assert entity.properties()["usingOnGetter"] == "TEST+2"
+        assert entity.properties()["usingOnSetter"] == "TEST+3"
+    }
+
+    @Test
+    def void testWriteUsesCustomConverterForBaseClassProperties() {
+        def fieldSchema = new PropertySchema(CustomConvertersInBaseClass, PropertyUtils.getPropertyDescriptor(new CustomConvertersInBaseClass(), "baseField"), registry)
+        def getterSchema = new PropertySchema(CustomConvertersInBaseClass, PropertyUtils.getPropertyDescriptor(new CustomConvertersInBaseClass(), "baseGetter"), registry)
+        def setterSchema = new PropertySchema(CustomConvertersInBaseClass, PropertyUtils.getPropertyDescriptor(new CustomConvertersInBaseClass(), "baseSetter"), registry)
+
+        def entity = new TestNode()
+        def local = new CustomConvertersInBaseClass(baseField: 1, baseGetter: 2, baseSetter: 3)
+
+        [fieldSchema, getterSchema, setterSchema].each { it.write(local, entity) }
+
+        assert entity.properties()["baseField"] == "TEST+1"
+        assert entity.properties()["baseGetter"] == "TEST+2"
+        assert entity.properties()["baseSetter"] == "TEST+3"
+    }
+
+    @Canonical
     static class DefaultConverterBean {
         String name
         int id
     }
 
+    @Canonical
     static class CustomConverterBean {
 
         @Using(StringToFloatConverter) float usingOnField
@@ -137,7 +187,7 @@ class PropertySchemaTest {
 
         @Override
         void write(Object value, String name, PropertyConverter.PropertyWriter writer) {
-            writer.addProperty(name, "TEST")
+            writer.addProperty(name, "TEST+${value as int}")
         }
 
         @Override

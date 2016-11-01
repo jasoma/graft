@@ -8,6 +8,7 @@ import com.github.jasoma.graft.convert.PropertyConverter
 
 import java.beans.PropertyDescriptor
 import java.lang.reflect.Field
+
 /**
  * Contains the details of a class property and the converter for reading/writing that property to the database.
  */
@@ -64,6 +65,16 @@ class PropertySchema {
      */
     def read(NeoEntity entity) {
         return converter.read(propertyType, propertyName, entity)
+    }
+
+    /**
+     * Write the property value from a local instance onto a database entity.
+     *
+     * @param localEntity the local object to read the property from.
+     * @param dbEntity the database entity to write the property to.
+     */
+    def write(Object localEntity, NeoEntity dbEntity) {
+        converter.write(localEntity[propertyName], propertyName, dbEntity.properties().&put as PropertyConverter.PropertyWriter)
     }
 
     @Override
