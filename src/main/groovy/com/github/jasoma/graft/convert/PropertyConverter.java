@@ -3,7 +3,8 @@ package com.github.jasoma.graft.convert;
 import com.github.jasoma.graft.access.NeoEntity;
 
 /**
- * Interface for converting complex properties into values suitable for storage in neo4j and back.
+ * Interface for converting complex properties into values suitable for storage in neo4j and back. Implementations
+ * must be thread safe.
  */
 public interface PropertyConverter {
 

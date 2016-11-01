@@ -11,7 +11,7 @@ class BeanPropertyDeserializer implements EntityDeserializer {
 
     @Override
     def <T> T convert(Class<T> type, NeoEntity entity, ResultRow row) throws EntityDeserializationException {
-        def obj = type.newInstance()
+        def obj = createInstance(type)
         entity.properties().each { key, value ->
             if (value == null) {
                 return;
@@ -26,6 +26,16 @@ class BeanPropertyDeserializer implements EntityDeserializer {
             }
         }
         return obj
+    }
+
+    /**
+     * Create an instance of the local type, defaults to calling the default constructor by reflection.
+     *
+     * @param type the type to create an instance of.
+     * @return the created instance.
+     */
+    protected <T> T createInstance(Class<T> type) {
+        return type.newInstance()
     }
 
     /**
