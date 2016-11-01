@@ -45,7 +45,7 @@ class EntitySchema<EntityType> {
         def instance = entityType.newInstance()
         def entity = row.get(key) as NeoEntity
         entityProperties.each { name, schema ->
-            instance[name] = schema.read(entity, row)
+            instance[name] = schema.read(entity)
         }
         return instance
     }

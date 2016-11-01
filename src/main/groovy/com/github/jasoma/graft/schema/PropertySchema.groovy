@@ -2,14 +2,12 @@ package com.github.jasoma.graft.schema
 
 import com.github.jasoma.graft.Using
 import com.github.jasoma.graft.access.NeoEntity
-import com.github.jasoma.graft.access.ResultRow
 import com.github.jasoma.graft.convert.ConverterRegistry
 import com.github.jasoma.graft.convert.DefaultConverter
 import com.github.jasoma.graft.convert.PropertyConverter
 
 import java.beans.PropertyDescriptor
 import java.lang.reflect.Field
-
 /**
  * Contains the details of a class property and the converter for reading/writing that property to the database.
  */
@@ -64,7 +62,7 @@ class PropertySchema {
      * @param row the result row the entity is from.
      * @return the value for the property.
      */
-    def read(NeoEntity entity, ResultRow row) {
+    def read(NeoEntity entity) {
         return converter.read(propertyType, propertyName, entity)
     }
 

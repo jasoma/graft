@@ -2,21 +2,15 @@ package com.github.jasoma.graft.schema
 
 import com.github.jasoma.graft.Using
 import com.github.jasoma.graft.access.NeoEntity
-import com.github.jasoma.graft.access.ResultRow
 import com.github.jasoma.graft.convert.ConcurrentMapRegistry
 import com.github.jasoma.graft.convert.ConverterRegistry
 import com.github.jasoma.graft.convert.PropertyConverter
 import infra.TestNode
 import org.apache.commons.beanutils.PropertyUtils
 import org.junit.Test
-import org.junit.runner.RunWith
-import org.mockito.Mock
-import org.mockito.runners.MockitoJUnitRunner
 
-@RunWith(MockitoJUnitRunner)
 class PropertySchemaTest {
 
-    @Mock ResultRow row
     ConverterRegistry registry = new ConcurrentMapRegistry(new StringToFloatConverter())
 
     @Test
@@ -26,10 +20,10 @@ class PropertySchemaTest {
 
         def entity = new TestNode(name: "test", id: 1)
 
-        def name = nameSchema.read(entity, row)
+        def name = nameSchema.read(entity)
         assert name == "test"
 
-        def id = idSchema.read(entity, row)
+        def id = idSchema.read(entity)
         assert id == 1
     }
 
@@ -41,13 +35,13 @@ class PropertySchemaTest {
 
         def entity = new TestNode(usingOnField: "field", usingOnGetter: "getter", usingOnSetter: "setter")
 
-        def field = fieldSchema.read(entity, row)
+        def field = fieldSchema.read(entity)
         assert field == 42f
 
-        def getter = getterSchema.read(entity, row)
+        def getter = getterSchema.read(entity)
         assert getter == 42f
 
-        def setter = setterSchema.read(entity, row)
+        def setter = setterSchema.read(entity)
         assert setter == 42f
 
         def converter = registry.get(StringToFloatConverter)
@@ -64,13 +58,13 @@ class PropertySchemaTest {
 
         def entity = new TestNode(baseField: "field", baseGetter: "getter", baseSetter: "setter")
 
-        def field = fieldSchema.read(entity, row)
+        def field = fieldSchema.read(entity)
         assert field == 42f
 
-        def getter = getterSchema.read(entity, row)
+        def getter = getterSchema.read(entity)
         assert getter == 42f
 
-        def setter = setterSchema.read(entity, row)
+        def setter = setterSchema.read(entity)
         assert setter == 42f
 
         def converter = registry.get(StringToFloatConverter)
