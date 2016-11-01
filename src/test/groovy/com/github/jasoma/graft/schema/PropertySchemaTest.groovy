@@ -56,6 +56,29 @@ class PropertySchemaTest {
         assert converter.propertiesRead.removeFirst() == "usingOnSetter+setter"
     }
 
+    @Test
+    def void testReadUsesCustomConverterForBaseClassProperties() {
+        def fieldSchema = new PropertySchema(CustomConvertersInBaseClass, PropertyUtils.getPropertyDescriptor(new CustomConvertersInBaseClass(), "baseField"), registry)
+        def getterSchema = new PropertySchema(CustomConvertersInBaseClass, PropertyUtils.getPropertyDescriptor(new CustomConvertersInBaseClass(), "baseGetter"), registry)
+        def setterSchema = new PropertySchema(CustomConvertersInBaseClass, PropertyUtils.getPropertyDescriptor(new CustomConvertersInBaseClass(), "baseSetter"), registry)
+
+        def entity = new TestNode(baseField: "field", baseGetter: "getter", baseSetter: "setter")
+
+        def field = fieldSchema.read(entity, row)
+        assert field == 42f
+
+        def getter = getterSchema.read(entity, row)
+        assert getter == 42f
+
+        def setter = setterSchema.read(entity, row)
+        assert setter == 42f
+
+        def converter = registry.get(StringToFloatConverter)
+        assert converter.propertiesRead.removeFirst() == "baseField+field"
+        assert converter.propertiesRead.removeFirst() == "baseGetter+getter"
+        assert converter.propertiesRead.removeFirst() == "baseSetter+setter"
+    }
+
     static class DefaultConverterBean {
         String name
         int id
@@ -85,6 +108,34 @@ class PropertySchemaTest {
             this.usingOnSetter = usingOnSetter
         }
     }
+
+
+    static class NodeBase {
+
+        @Using(StringToFloatConverter) float baseField
+        float baseGetter
+        float baseSetter
+
+        @Using(StringToFloatConverter)
+        float getBaseGetter() {
+            return baseGetter
+        }
+
+        void setBaseGetter(float baseGetter) {
+            this.baseGetter = baseGetter
+        }
+
+        float getBaseSetter() {
+            return baseSetter
+        }
+
+        @Using(StringToFloatConverter)
+        void setBaseSetter(float baseSetter) {
+            this.baseSetter = baseSetter
+        }
+    }
+
+    static class CustomConvertersInBaseClass extends NodeBase {}
 
     static class StringToFloatConverter implements PropertyConverter {
 
