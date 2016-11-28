@@ -16,10 +16,9 @@ import java.lang.annotation.Target;
 public @interface Incoming {
 
     /**
-     * The type of the relationship that links the two nodes. In cases where the property type is {@link Related} the
-     * type can be omitted as it can be determined from the property type.
+     * The type of the relationship that links the two nodes.
      *
      * @return the type of the relationship linking the two nodes.
      */
-    Class<?> value() default Incoming.class;
+    Class<?> value();
 }

@@ -2,18 +2,15 @@ package com.github.jasoma.graft;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Marks a type as a relation entity to be persisted in Neo4j. The type of the relation will be the
- * simple name of the class.
+ * Marks a static method on a class as a serialization method for conversion to neo4j compatible types during
+ * writes to the database.
  */
 @Documented
 @Retention(RetentionPolicy.RUNTIME)
-@Target(ElementType.TYPE)
-@Inherited
-public @interface Relation { }
-
+@Target({ ElementType.METHOD })
+public @interface Serialize { }

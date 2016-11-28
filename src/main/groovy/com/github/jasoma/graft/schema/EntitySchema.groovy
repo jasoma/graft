@@ -4,6 +4,7 @@ import com.github.jasoma.graft.Unmapped
 import com.github.jasoma.graft.access.NeoEntity
 import com.github.jasoma.graft.access.ResultRow
 import com.github.jasoma.graft.convert.ConverterRegistry
+import com.github.jasoma.graft.internal.Reflection
 import org.apache.commons.beanutils.PropertyUtils
 
 import java.beans.PropertyDescriptor
@@ -18,7 +19,7 @@ class EntitySchema<EntityType> {
     private Class<EntityType> entityType
     private Map<String, PropertySchema> entityProperties
 
-    EntitySchema(Class<EntityType> entityType, ConverterRegistry registry) {
+    EntitySchema(Class<EntityType> entityType, ConverterRegistry converters, SchemaRegistry schemas) {
         this.entityType = entityType
         this.entityProperties = new HashMap<>()
 
@@ -26,7 +27,13 @@ class EntitySchema<EntityType> {
             if (ignorable(property, entityType)) {
                 return;
             }
-            entityProperties[property.name] = new PropertySchema(entityType, property, registry)
+            if (Reflection.isEntity(property.propertyType)) {
+                // TODO
+            }
+            else {
+                entityProperties[property.name] = new PropertySchema(entityType, property, converters)
+            }
+
         }
     }
 
@@ -37,8 +44,7 @@ class EntitySchema<EntityType> {
         if (property.readMethod.declaringClass == Object || property.name == GROOVY_META_CLASS_PROPERTY) {
             return true
         }
-        def annotationSources = [property.readMethod, property.writeMethod, type.fields.find {it.name == property.name}]
-        return annotationSources.any { it?.getAnnotation(Unmapped) != null }
+        return Reflection.annotationSources(type, property).any { it?.getAnnotation(Unmapped) != null }
     }
 
     def EntityType read(ResultRow row, String key) {

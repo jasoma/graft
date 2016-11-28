@@ -1,5 +1,7 @@
 package com.github.jasoma.graft.internal
 
+import com.github.jasoma.graft.Node
+import com.github.jasoma.graft.Relation
 import org.apache.commons.beanutils.PropertyUtils
 
 import java.beans.PropertyDescriptor
@@ -53,6 +55,17 @@ class Reflection {
         def sources = [property.readMethod, property.writeMethod, findField(type, property.name)]
         sources.removeAll { it == null }
         return sources
+    }
+
+    /**
+     * Checks if a class is an entity type by looking for the presence of either of the {@link Node}
+     * or {@link Relation} annotations.
+     *
+     * @param type the type to check.
+     * @return true if an entity annotation is present anywhere in the class hierarchy, false otherwise.
+     */
+    public static boolean isEntity(Class<?> type) {
+        return type.getAnnotation(Node) || type.getAnnotation(Relation)
     }
 
 }
