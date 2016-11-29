@@ -1,8 +1,13 @@
 package com.github.jasoma.graft.ast
 
-import com.github.jasoma.graft.Unmapped
-import org.codehaus.groovy.ast.*
-import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.ClassHelper
+import org.codehaus.groovy.ast.ClassNode
+import org.codehaus.groovy.ast.MethodNode
+import org.codehaus.groovy.ast.Parameter
+import org.codehaus.groovy.ast.expr.ArgumentListExpression
+import org.codehaus.groovy.ast.expr.ConstantExpression
+import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
+import org.codehaus.groovy.ast.expr.VariableExpression
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GenericsUtils
@@ -23,16 +28,6 @@ abstract class AbstractEntityTransformation extends AbstractASTTransformation {
     protected static final ClassNode[] NO_EXCEPTIONS = new ClassNode[0]
 
     /**
-     * Class node for the {@link Unmapped} annotation.
-     */
-    protected static final ClassNode UNMAPPED_CLASS = ClassHelper.makeCached(Unmapped)
-
-    /**
-     * Class node for the {@link EntityMethods} delegate.
-     */
-    protected static final ClassNode METHODS_CLASS = ClassHelper.makeCached(EntityMethods)
-
-    /**
      * Add the graphId and modified properties to an entity class. The methods added directly always return null/false
      * and will be intercepted by the proxy if the entity was loaded from the database.
      *
@@ -49,38 +44,6 @@ abstract class AbstractEntityTransformation extends AbstractASTTransformation {
         def stringSet = GenericsUtils.makeClassSafeWithGenerics(Set, ClassHelper.makeCached(String))
         def modifiedPropertiesGetter = createMethod("getModifiedProperties", stringSet, new ReturnStatement(emptySetCall))
         classNode.addMethod(modifiedPropertiesGetter)
-    }
-
-    /**
-     * Checks if a property node has the {@link Unmapped} annotation either directly or on the field.
-     * making up the property.
-     *
-     * @param property the property to check.
-     * @return true if any part of the property contains the annotation, false otherwise.
-     */
-    protected boolean unmapped(PropertyNode property) {
-        return unmapped(property as AnnotatedNode) || unmapped(property.field)
-    }
-
-    /**
-     * Checks if any node has the {@link Unmapped} annotation on it and can be ignored.
-     *
-     * @param node the node to check.
-     * @return true if it has the annotation, false otherwise.
-     */
-    protected boolean unmapped(AnnotatedNode node) {
-        return node.annotations.any { it.classNode == UNMAPPED_CLASS }
-    }
-
-    /**
-     * Create a method call expression for one of the utility methods in {@linnk EntityMethods}.
-     *
-     * @param method the name of the method to call.
-     * @param args arguments to the method.
-     * @return the method call expression.
-     */
-    protected StaticMethodCallExpression callEntityMethod(String method, Expression... args) {
-        return new StaticMethodCallExpression(METHODS_CLASS, method, new ArgumentListExpression(args))
     }
 
     /**
