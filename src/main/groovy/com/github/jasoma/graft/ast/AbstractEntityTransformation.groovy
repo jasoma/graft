@@ -1,20 +1,26 @@
 package com.github.jasoma.graft.ast
 
 import com.github.jasoma.graft.Unmapped
-import org.codehaus.groovy.ast.AnnotatedNode
-import org.codehaus.groovy.ast.ClassHelper
-import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.PropertyNode
-import org.codehaus.groovy.ast.expr.ArgumentListExpression
-import org.codehaus.groovy.ast.expr.ConstantExpression
-import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
-import org.codehaus.groovy.ast.expr.VariableExpression
-import org.codehaus.groovy.ast.stmt.BlockStatement
+import org.codehaus.groovy.ast.*
+import org.codehaus.groovy.ast.expr.*
+import org.codehaus.groovy.ast.stmt.ReturnStatement
+import org.codehaus.groovy.ast.stmt.Statement
+import org.codehaus.groovy.ast.tools.GenericsUtils
 import org.codehaus.groovy.transform.AbstractASTTransformation
 /**
- * base class for the entity and node transformations.
+ * base class for the relationship and node transformations.
  */
 abstract class AbstractEntityTransformation extends AbstractASTTransformation {
+
+    /**
+     * Empty array for creating no-args methods.
+     */
+    protected static final Parameter[] NO_ARGS = new Parameter[0]
+
+    /**
+     * Empty array for creating methods with no declared exceptions.
+     */
+    protected static final ClassNode[] NO_EXCEPTIONS = new ClassNode[0]
 
     /**
      * Class node for the {@link Unmapped} annotation.
@@ -27,36 +33,22 @@ abstract class AbstractEntityTransformation extends AbstractASTTransformation {
     protected static final ClassNode METHODS_CLASS = ClassHelper.makeCached(EntityMethods)
 
     /**
-     * Add the graphId and modified properties to an entity class.
+     * Add the graphId and modified properties to an entity class. The methods added directly always return null/false
+     * and will be intercepted by the proxy if the entity was loaded from the database.
      *
      * @param classNode the entity class.
      */
     protected void addEntityProperties(ClassNode classNode) {
-        classNode.addProperty("graphId", ACC_PUBLIC, ClassHelper.Long_TYPE, ConstantExpression.NULL, null, null)
-        classNode.addProperty("modified", ACC_PUBLIC, ClassHelper.boolean_TYPE, ConstantExpression.NULL, null, null)
-    }
+        def idGetter = createMethod("getGraphId", ClassHelper.Long_TYPE, new ReturnStatement(constant(null)))
+        classNode.addMethod(idGetter)
 
-    /**
-     * Adds a statement to the beginning of all setters for properties in the class that will
-     * set the {@code modified} flag of the class to true whenever they are called. Ignores
-     * any {@link Unmapped} properties.
-     *
-     * @param classNode the entity class.
-     */
-    protected void addModifiedChecks(ClassNode classNode) {
-        for (PropertyNode property : classNode.properties) {
+        def modifiedGetter = createMethod("isModified", ClassHelper.boolean_TYPE, new ReturnStatement(constant(false)))
+        classNode.addMethod(modifiedGetter)
 
-            if (unmapped(property)) {
-                continue;
-            }
-
-            def setter = (BlockStatement) property.setterBlock
-            def modifiecCall = new StaticMethodCallExpression(METHODS_CLASS, "modified", new ArgumentListExpression(
-                    new VariableExpression("this"),
-                    new ConstantExpression(property.name)
-            ))
-
-        }
+        def emptySetCall = new StaticMethodCallExpression(ClassHelper.makeCached(Collections), "emptySet", new ArgumentListExpression())
+        def stringSet = GenericsUtils.makeClassSafeWithGenerics(Set, ClassHelper.makeCached(String))
+        def modifiedPropertiesGetter = createMethod("getModifiedProperties", stringSet, new ReturnStatement(emptySetCall))
+        classNode.addMethod(modifiedPropertiesGetter)
     }
 
     /**
@@ -80,4 +72,49 @@ abstract class AbstractEntityTransformation extends AbstractASTTransformation {
         return node.annotations.any { it.classNode == UNMAPPED_CLASS }
     }
 
+    /**
+     * Create a method call expression for one of the utility methods in {@linnk EntityMethods}.
+     *
+     * @param method the name of the method to call.
+     * @param args arguments to the method.
+     * @return the method call expression.
+     */
+    protected StaticMethodCallExpression callEntityMethod(String method, Expression... args) {
+        return new StaticMethodCallExpression(METHODS_CLASS, method, new ArgumentListExpression(args))
+    }
+
+    /**
+     * Helper method for creating a {@link MethodNode}, by default generates a public no args method.
+     *
+     * @param name the name of the method.
+     * @param returnType the result type.
+     * @param code the method body.
+     * @param modifiers modifiers for the method.
+     * @param parameters parameters for the method.
+     * @param exceptions exceptions the method might through.
+     * @return the method node.
+     */
+    protected MethodNode createMethod(String name, ClassNode returnType, Statement code, int modifiers = ACC_PUBLIC, Parameter[] parameters = NO_ARGS, ClassNode[] exceptions = NO_EXCEPTIONS) {
+        return new MethodNode(name, modifiers, returnType, parameters, exceptions, code)
+    }
+
+    /**
+     * Shorthand for creating a variable expression.
+     *
+     * @param name the name of the variable to reference.
+     * @return the expression referencing the variable.
+     */
+    protected VariableExpression var(String name) {
+        return new VariableExpression(name)
+    }
+
+    /**
+     * Shorthand for creating a constant expression.
+     *
+     * @param name the value for the constant to take.
+     * @return the expression.
+     */
+    protected ConstantExpression constant(Object value) {
+        return new ConstantExpression(value)
+    }
 }

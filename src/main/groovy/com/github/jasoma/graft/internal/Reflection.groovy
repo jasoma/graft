@@ -2,16 +2,39 @@ package com.github.jasoma.graft.internal
 
 import com.github.jasoma.graft.Node
 import com.github.jasoma.graft.Relation
+import com.github.jasoma.graft.Unmapped
 import org.apache.commons.beanutils.PropertyUtils
 
 import java.beans.PropertyDescriptor
 import java.lang.reflect.AnnotatedElement
 import java.lang.reflect.Field
-
 /**
  * Internal utility class for performing reflection tasks.
  */
 class Reflection {
+
+    private static final String GROOVY_METACLASS_PROPERTY = "metaClass"
+
+    /**
+     * Find all properties for a class that do not have the {@link Unmapped} annotation.
+     *
+     * @param type the class to find properties for.
+     * @return the set of all property names that are mapped to the database.
+     */
+    public static Set<String> findMappedProperties(Class<?> type) {
+        HashSet<String> set = new HashSet<>()
+        def descriptors = PropertyUtils.getPropertyDescriptors(type).toList()
+        descriptors.removeAll { it.name == GROOVY_METACLASS_PROPERTY || it.readMethod == null || it.writeMethod == null }
+
+        for (PropertyDescriptor property : descriptors) {
+            def sources = annotationSources(type, property)
+            if (sources.any { it.isAnnotationPresent(Unmapped) } ) {
+                continue
+            }
+            set.add(property.name)
+        }
+        return set
+    }
 
     /**
      * Search for a named field on a class or anywhere in that class's type hierarchy.

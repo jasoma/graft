@@ -16,7 +16,6 @@ class NodeAstTransformation extends AbstractEntityTransformation {
     void visit(ASTNode[] nodes, SourceUnit source) {
         ClassNode nodeClass = nodes[1] as ClassNode
         addEntityProperties(nodeClass)
-        addModifiedChecks(nodeClass)
     }
 
 }
