@@ -7,11 +7,11 @@ import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.GroovyASTTransformation
 
 /**
- * AST Transformation for all classes marked with {@link com.github.jasoma.graft.Node}. Adds graphId properties and related methods
+ * AST Transformation for all classes marked with {@link com.github.jasoma.graft.Relation}. Adds graphId properties and related methods
  * as well persistence methods.
  */
 @GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
-class NodeAstTransformation extends AbstractEntityTransformation {
+class RelationAstTransformation extends AbstractEntityTransformation {
 
     @Override
     void visit(ASTNode[] nodes, SourceUnit source) {

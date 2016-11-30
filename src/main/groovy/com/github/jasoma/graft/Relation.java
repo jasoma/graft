@@ -1,5 +1,7 @@
 package com.github.jasoma.graft;
 
+import org.codehaus.groovy.transform.GroovyASTTransformationClass;
+
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
@@ -15,5 +17,6 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 @Target(ElementType.TYPE)
 @Inherited
+@GroovyASTTransformationClass("com.github.jasoma.graft.ast.RelationAstTransformation")
 public @interface Relation { }
 
