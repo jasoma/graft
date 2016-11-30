@@ -1,5 +1,6 @@
 package com.github.jasoma.graft.ast
 
+import com.github.jasoma.graft.EntityState
 import groovy.transform.PackageScope
 
 /**
@@ -13,7 +14,7 @@ class EntityProxy {
     private final Set<String> modifiedProperties = new HashSet<>()
 
     /**
-     * The noe4j id assigned to the entity.
+     * The neo4j id assigned to the entity.
      */
     long graphId
 
@@ -68,6 +69,16 @@ class EntityProxy {
      */
     Set<String> getModifiedProperties() {
         return Collections.unmodifiableSet(modifiedProperties)
+    }
+
+    /**
+     * @return the state of the entity.
+     */
+    EntityState getState() {
+        if (deleted) {
+            return EntityState.Deleted
+        }
+        return (modified) ? EntityState.Modified : EntityState.Unmodified
     }
 
     /**

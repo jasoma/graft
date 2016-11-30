@@ -1,11 +1,14 @@
 package com.github.jasoma.graft.ast
 
+import com.github.jasoma.graft.EntityState
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
 import org.codehaus.groovy.ast.MethodNode
 import org.codehaus.groovy.ast.Parameter
 import org.codehaus.groovy.ast.expr.ArgumentListExpression
+import org.codehaus.groovy.ast.expr.ClassExpression
 import org.codehaus.groovy.ast.expr.ConstantExpression
+import org.codehaus.groovy.ast.expr.PropertyExpression
 import org.codehaus.groovy.ast.expr.StaticMethodCallExpression
 import org.codehaus.groovy.ast.expr.VariableExpression
 import org.codehaus.groovy.ast.stmt.ReturnStatement
@@ -44,6 +47,10 @@ abstract class AbstractEntityTransformation extends AbstractASTTransformation {
         def stringSet = GenericsUtils.makeClassSafeWithGenerics(Set, ClassHelper.makeCached(String))
         def modifiedPropertiesGetter = createMethod("getModifiedProperties", stringSet, new ReturnStatement(emptySetCall))
         classNode.addMethod(modifiedPropertiesGetter)
+
+        def stateGetter = createMethod("getState", ClassHelper.makeCached(EntityState),
+                new ReturnStatement(new PropertyExpression(new ClassExpression(ClassHelper.makeCached(EntityState)), "Unsaved")))
+        classNode.addMethod(stateGetter)
     }
 
     /**
