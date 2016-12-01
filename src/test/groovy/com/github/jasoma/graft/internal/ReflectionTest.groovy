@@ -7,14 +7,14 @@ class ReflectionTest {
 
     @Test
     def void testMappedProperties() {
-        def groovy = Reflection.findMappedProperties(GroovyProperties)
+        def groovy = Reflection.mappedProperties(GroovyProperties)
         assert groovy.contains("mapped")
         assert !groovy.contains("unmapped")
     }
 
     @Test
     def void testMappedPropertiesCustomAccessors() {
-        def javaBeans = Reflection.findMappedProperties(JavaBeanProperties)
+        def javaBeans = Reflection.mappedProperties(JavaBeanProperties)
         assert javaBeans.contains("mapped")
         assert !javaBeans.contains("field")
         assert !javaBeans.contains("getter")
@@ -23,7 +23,7 @@ class ReflectionTest {
 
     @Test
     def void testMappedPropertiesSetterGetterOnly() {
-        def mapped = Reflection.findMappedProperties(SetterGetterOnly)
+        def mapped = Reflection.mappedProperties(SetterGetterOnly)
         assert mapped.empty
     }
 

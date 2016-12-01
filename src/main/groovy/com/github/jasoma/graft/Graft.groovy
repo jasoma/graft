@@ -35,7 +35,7 @@ class Graft {
     private def void assertEntity(def obj, String action) {
         if (!Reflection.isEntity(obj.class)) {
             throw new IllegalArgumentException("Cannot perform '$action' on obect (${obj.class.getSimpleName()}, $obj) " +
-                    "as it is not a @Node or @Entity type")
+                    "as it is not a @Node or @Relation type")
         }
     }
 
