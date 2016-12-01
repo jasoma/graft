@@ -14,7 +14,7 @@ class EntityProxy {
     private final Set<String> modifiedProperties = new HashSet<>()
 
     /**
-     * The neo4j id assigned to the entity.
+     * The neo4j identifier assigned to the entity.
      */
     long graphId
 
@@ -27,7 +27,7 @@ class EntityProxy {
      * Construct a proxy for an entity loaded from the database.
      *
      * @param entity the entity that was loaded.
-     * @param graphId the id of the entity in neo4j.
+     * @param graphId the identifier of the entity in neo4j.
      * @param mappedProperties the set of properties for the entity that are mapped to the database.
      */
     EntityProxy(entity, long graphId, Set<String> mappedProperties) {

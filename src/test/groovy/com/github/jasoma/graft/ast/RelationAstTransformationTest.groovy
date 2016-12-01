@@ -106,4 +106,29 @@ class RelationAstTransformationTest extends GroovyTestCase {
         '''
     }
 
+    @Test
+    def void testDefaultTypeName() {
+        assertScript '''
+            import com.github.jasoma.graft.Relation
+
+            @Relation
+            class MyRelation { }
+
+            def r = new MyRelation()
+            assert r.typeName == "MyRelation"
+        '''
+    }
+
+    @Test
+    def void testCustomTypeName() {
+        assertScript '''
+            import com.github.jasoma.graft.Relation
+
+            @Relation("Foo")
+            class MyRelation { }
+
+            def r = new MyRelation()
+            assert r.typeName == "Foo"
+        '''
+    }
 }

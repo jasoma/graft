@@ -106,4 +106,42 @@ class NodeAstTransformationTest extends GroovyTestCase {
         '''
     }
 
+    @Test
+    def void testDefaultLabels() {
+        assertScript '''
+            import com.github.jasoma.graft.Node
+
+            @Node
+            class MyNode { }
+
+            def n = new MyNode()
+            assert n.labels == ["MyNode"]
+        '''
+    }
+
+    @Test
+    def void testCustomLabel() {
+        assertScript '''
+            import com.github.jasoma.graft.Node
+
+            @Node(labels = "Foo")
+            class MyNode { }
+
+            def n = new MyNode()
+            assert n.labels == ["Foo"]
+        '''
+    }
+
+    @Test
+    def void testCustomLabels() {
+        assertScript '''
+            import com.github.jasoma.graft.Node
+
+            @Node(labels = ["Foo", "Bar"])
+            class MyNode { }
+
+            def n = new MyNode()
+            assert n.labels == ["Foo", "Bar"]
+        '''
+    }
 }
