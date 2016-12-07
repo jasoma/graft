@@ -36,6 +36,10 @@ class EntityProxy {
         this.mappedProperties = mappedProperties
     }
 
+    def methodMissing(String name, def args) {
+        entity.invokeMethod(name, args)
+    }
+
     def propertyMissing(String name) {
         return entity[name]
     }

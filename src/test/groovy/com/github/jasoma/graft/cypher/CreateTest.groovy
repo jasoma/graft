@@ -1,5 +1,6 @@
 package com.github.jasoma.graft.cypher
 
+import com.github.jasoma.graft.EntityState
 import com.github.jasoma.graft.Node
 import com.github.jasoma.graft.access.NeoDatabase
 import com.github.jasoma.graft.convert.ConcurrentMapRegistry
@@ -40,6 +41,17 @@ class CreateTest implements TestClass {
         def create = new Create(node, "t")
         neo.withSession { session ->
             def created = create.create(session, new ConcurrentMapRegistry())
+            assert created.state == EntityState.Unmodified
+        }
+    }
+
+    @Test
+    def void testStaticCreate() {
+        neo.withSession { session ->
+            def created = Create.create(CreateTestNode, session, new ConcurrentMapRegistry(), foo: "Foo", bar: 42)
+            assert created.foo == "Foo"
+            assert created.bar == 42
+            assert created.state == EntityState.Unmodified
         }
     }
 

@@ -2,11 +2,11 @@ package com.github.jasoma.graft.cypher
 
 import com.github.jasoma.graft.access.NeoQueryRunner
 import com.github.jasoma.graft.ast.EntityProxy
+import com.github.jasoma.graft.convert.ConcurrentMapRegistry
 import com.github.jasoma.graft.convert.ConverterRegistry
 import com.github.jasoma.graft.internal.EntitySchema
 import com.github.jasoma.graft.internal.NodeSchema
 import com.github.jasoma.graft.internal.PropertySchema
-import com.github.jasoma.graft.internal.Reflection
 
 /**
  * Generates a {@code CREATE} create clause for a single node and it's properties. The generate clause will be for
@@ -28,19 +28,19 @@ import com.github.jasoma.graft.internal.Reflection
  *     assert create.parameterizedCypher == "CREATE (n:MyNode {foo: {n_foo}, bar: {n_bar}})"
  * </code></pre>
  */
-class Create implements CypherQuery {
+class Create<T> implements CypherQuery {
 
-    private final def node
+    private final T node
     private final String identifier
-    private final EntitySchema schema
-    private Map<String, String> parametersToProperties = new HashMap<>()
+    private final NodeSchema schema
+    private Map<String, String> parametersToProperties
 
     /**
      * Generates a create clause for a node. A fixed identifier will be used.
      *
      * @param node the node to generate the create clause for.
      */
-    Create(def node) {
+    Create(T node) {
         this(node, "n")
     }
 
@@ -50,19 +50,24 @@ class Create implements CypherQuery {
      * @param node the node to generate the create clause for.
      * @param identifier the identifier to use for the node and parameters in the generated cypher.
      */
-    Create(def node, String identifier) {
+    Create(T node, String identifier) {
         this.node = Objects.requireNonNull(node, "entity cannot be null")
         this.identifier = Objects.requireNonNull(identifier, "identifier cannot be null")
         this.schema = new NodeSchema(nodeType())
+        this.parametersToProperties = parameterMapping(node, schema, identifier)
+    }
 
-        for (PropertySchema prop : schema.scalarSchema()) {
-            def value = node[prop.name]
-            if (value == null || Reflection.isEntity(value)) {
+    private static Map<String, String> parameterMapping(def values, EntitySchema schema, String identifier) {
+        Map<String, String> mapping = new HashMap<>()
+        for (PropertySchema prop : schema.getScalarSchema()) {
+            def value = values[prop.name]
+            if (value == null) {
                 continue
             }
             def param = "${identifier}_$prop.name"
-            parametersToProperties[param] = prop.name
+            mapping[param] = prop.name
         }
+        return mapping
     }
 
     private Class<?> nodeType() {
@@ -91,21 +96,29 @@ class Create implements CypherQuery {
 
     @Override
     public Map<String, Object> parameters(ConverterRegistry converters) {
-        Map<String, Object> map = new HashMap()
-        parametersToProperties.each { param, prop ->
-            def propertySchema = schema.propertySchema(prop)
-            map[param] = propertySchema.toDbValue(node[prop], converters)
+        return buildQueryParameters(node, parametersToProperties, schema, converters)
+    }
+
+    private static Map<String, Object> buildQueryParameters(def values, Map<String, String> parameterMapping, EntitySchema schema, ConverterRegistry converters) {
+        Map<String, Object> map = new HashMap<>()
+        parameterMapping.each { param, prop ->
+            def propertySchema = schema.getPropertySchema(prop)
+            map[param] = propertySchema.toDbValue(values[prop], converters)
         }
         return map
     }
 
     @Override
     public String parameterizedCypher() {
+        return buildCypher(parametersToProperties, identifier, schema.labels)
+    }
+
+    private static String buildCypher(Map<String, String> parameterMapping, String identifier, Collection<String> labels) {
         def builder = new StringBuilder("CREATE (")
         builder << identifier
-        node.labels.each { builder << ":$it " }
+        labels.each { builder << ":$it " }
 
-        def paramList = parametersToProperties.collect { "`$it.value`: {$it.key}"}
+        def paramList = parameterMapping.collect { "`$it.value`: {$it.key}"}
         builder << "{${paramList.join(", ")}})"
         return builder.toString()
     }
@@ -117,14 +130,44 @@ class Create implements CypherQuery {
      *
      * @param runner the query runner to execute the query.
      * @param converters a registry of converters for properties that need them.
+     * @param reuseLocal whether or not to re-use the local {@link #node} instance after the
+     *                   create call returns.
      * @returns a local instance of the created node.
      */
-    def create(NeoQueryRunner runner, ConverterRegistry converters) {
-        def query = "${parameterizedCypher()} RETURN ID($identifier) AS id"
+    def T create(NeoQueryRunner runner, ConverterRegistry converters, boolean reuseLocal = true) {
+        def query = "${parameterizedCypher()} RETURN $identifier"
         def results = runner.run(parameters(converters), query)
-        def id = results.next().get("id") as long
+        def createdNode = results.next().node(identifier)
         results.close()
-        return new EntityProxy(node, id, schema.scalarProperties())
+
+        def localInstance = node
+        if (!reuseLocal) {
+            localInstance = schema.createInstance(createdNode.properties(), converters)
+        }
+        return (T) new EntityProxy(localInstance, createdNode.graphId(), schema.mappedProperties)
+    }
+
+    /**
+     * Builds a create clause from a map of values passed directly and the class of the node to create.
+     * Saves the values to the database and then creates and returns a local instance of the class.
+     *
+     * @param values the values to assign as properties of the node.
+     * @param nodeType the local class of the node.
+     * @param runner the query runner to execute the query.
+     * @param converters a registry of converters for properties that need them.
+     */
+    def static <T> T create(Map values, Class<T> nodeType, NeoQueryRunner runner, ConcurrentMapRegistry converters) {
+        def schema = new NodeSchema(nodeType)
+        def parameterMapping = parameterMapping(values, schema, "n")
+        def query = "${buildCypher(parameterMapping, "n", schema.labels)} RETURN n"
+        def parameters = buildQueryParameters(values, parameterMapping, schema, converters)
+
+        def results = runner.run(parameters, query)
+        def createdNode = results.next().node("n")
+        results.close()
+
+        def local = schema.createInstance(createdNode.properties(), converters)
+        return (T) new EntityProxy(local, createdNode.graphId(), schema.mappedProperties)
     }
 
 }

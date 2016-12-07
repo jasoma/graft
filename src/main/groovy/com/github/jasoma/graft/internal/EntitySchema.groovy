@@ -8,10 +8,10 @@ import com.github.jasoma.graft.convert.ConverterRegistry
  */
 abstract class EntitySchema {
 
-    // TODO: need all mapped properties as well as entity properties
-
     private Class entityType
     private Map<String, PropertySchema> scalarProperties = new HashMap<>()
+    private Set<String> entityProperties
+    private Set<String> mappedProperties
 
     /**
      * Create schemas for each of the entities properties.
@@ -20,26 +20,64 @@ abstract class EntitySchema {
      */
     EntitySchema(Class<?> entityType) {
         this.entityType = entityType
+        def entityProperties = new HashSet()
         for (PropertySchema propertySchema : Reflection.mappedProperties(entityType)) {
-            scalarProperties[propertySchema.name] = propertySchema
+            if (Reflection.isEntity(propertySchema.propertyType)) {
+                entityProperties.add(propertySchema.name)
+            }
+            else {
+                scalarProperties[propertySchema.name] = propertySchema
+            }
         }
+        this.entityProperties = Collections.unmodifiableSet(entityProperties)
+        def allProperties = new HashSet()
+        allProperties.addAll(scalarProperties.keySet())
+        allProperties.addAll(entityProperties)
+        this.mappedProperties = Collections.unmodifiableSet(allProperties)
+    }
+
+    /**
+     * @return the type of the entity this schema represents.
+     */
+    Class getEntityType() {
+        return entityType
+    }
+
+    /**
+     * @return the names of all entity properties of the {@link #entityType}.
+     */
+    Set<String> getEntityProperties() {
+        return entityProperties
     }
 
     /**
      * @return the names of all non-entity properties of the {@link #entityType}.
      */
-    public Set<String> scalarProperties() {
+    public Set<String> getScalarProperties() {
         return scalarProperties.keySet()
     }
 
     /**
      * @return the schemas of all non-entity properties of the {@link #entityType}.
      */
-    public Collection<PropertySchema> scalarSchema() {
+    public Collection<PropertySchema> getScalarSchema() {
         return scalarProperties.values()
     }
 
-    public PropertySchema propertySchema(String property) {
+    /**
+     * @return the names of all mapped properties of the {@link #entityType}.
+     */
+    Set<String> getMappedProperties() {
+        return mappedProperties
+    }
+
+    /**
+     * Find the schema for a property of the entity.
+     *
+     * @param property the name of the property.
+     * @return the schema for that property.
+     */
+    public PropertySchema getPropertySchema(String property) {
         def schema = scalarProperties[property]
         if (schema == null) {
             throw new IllegalArgumentException("No mapped property '$property' exists on type $entityType")

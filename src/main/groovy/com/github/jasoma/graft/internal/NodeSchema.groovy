@@ -20,7 +20,7 @@ class NodeSchema extends EntitySchema {
     /**
      * @return the set of labels for this node in neo4j.
      */
-    List<String> getLabels() {
+    Set<String> getLabels() {
         return labels
     }
 }

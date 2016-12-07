@@ -20,6 +20,9 @@ import org.codehaus.groovy.transform.AbstractASTTransformation
  */
 abstract class AbstractEntityTransformation extends AbstractASTTransformation {
 
+    // TODO: schema static property
+    // TODO: check for no-args ctor
+
     /**
      * Empty array for creating no-args methods.
      */
