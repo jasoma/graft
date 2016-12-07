@@ -23,6 +23,7 @@ class RelationAstTransformation extends AbstractEntityTransformation {
         ClassNode relationClass = nodes[1] as ClassNode
         addEntityProperties(relationClass)
         addTypeProperty(relationClass, atRelation)
+        assertNoArgsCtor(relationClass, source)
     }
 
     private void addTypeProperty(ClassNode relationClass, AnnotationNode atRelation) {

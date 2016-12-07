@@ -14,14 +14,13 @@ import org.codehaus.groovy.ast.expr.VariableExpression
 import org.codehaus.groovy.ast.stmt.ReturnStatement
 import org.codehaus.groovy.ast.stmt.Statement
 import org.codehaus.groovy.ast.tools.GenericsUtils
+import org.codehaus.groovy.control.SourceUnit
+import org.codehaus.groovy.syntax.SyntaxException
 import org.codehaus.groovy.transform.AbstractASTTransformation
 /**
  * base class for the relationship and node transformations.
  */
 abstract class AbstractEntityTransformation extends AbstractASTTransformation {
-
-    // TODO: schema static property
-    // TODO: check for no-args ctor
 
     /**
      * Empty array for creating no-args methods.
@@ -89,5 +88,22 @@ abstract class AbstractEntityTransformation extends AbstractASTTransformation {
      */
     protected ConstantExpression constant(Object value) {
         return new ConstantExpression(value)
+    }
+
+    /**
+     * Verifies that the entity class has a no-args constructor and add errors to the source unit if not.
+     *
+     * @param entityClass the class node for the entity.
+     * @param source the source unit for the compilation.
+     */
+    protected void assertNoArgsCtor(ClassNode entityClass, SourceUnit source) {
+        if (entityClass.getDeclaredConstructors().empty) {
+            return
+        }
+        if (entityClass.getDeclaredConstructor(NO_ARGS)) {
+            return
+        }
+        def firstCtor = entityClass.getDeclaredConstructors().first()
+        source.addError(new SyntaxException("Entity class ${entityClass.name} has no default constructor", firstCtor.lineNumber, firstCtor.columnNumber))
     }
 }

@@ -1,16 +1,18 @@
 package com.github.jasoma.graft.ast
 
+import com.github.jasoma.graft.internal.NodeSchema
 import org.codehaus.groovy.ast.ASTNode
 import org.codehaus.groovy.ast.AnnotationNode
 import org.codehaus.groovy.ast.ClassHelper
 import org.codehaus.groovy.ast.ClassNode
-import org.codehaus.groovy.ast.expr.ConstantExpression
-import org.codehaus.groovy.ast.expr.ListExpression
+import org.codehaus.groovy.ast.expr.ArgumentListExpression
+import org.codehaus.groovy.ast.expr.ClassExpression
+import org.codehaus.groovy.ast.expr.ConstructorCallExpression
 import org.codehaus.groovy.ast.stmt.ReturnStatement
-import org.codehaus.groovy.ast.tools.GenericsUtils
 import org.codehaus.groovy.control.CompilePhase
 import org.codehaus.groovy.control.SourceUnit
 import org.codehaus.groovy.transform.GroovyASTTransformation
+
 /**
  * AST Transformation for all classes marked with {@link com.github.jasoma.graft.Node}. Adds graphId properties and related methods
  * as well persistence methods.
@@ -23,35 +25,16 @@ class NodeAstTransformation extends AbstractEntityTransformation {
         AnnotationNode atNode = nodes[0] as AnnotationNode
         ClassNode nodeClass = nodes[1] as ClassNode
         addEntityProperties(nodeClass)
-        addLabelsProperty(nodeClass, atNode)
+        addSchemaProperty(nodeClass)
+        assertNoArgsCtor(nodeClass, source)
     }
 
-    private void addLabelsProperty(ClassNode nodeClass, AnnotationNode atNode) {
-        def names = labelNames(nodeClass, atNode)
-        def listString = GenericsUtils.makeClassSafeWithGenerics(List, ClassHelper.makeCached(String))
-        // TODO: this is generating a new list each time the method is called,
-        //       convert to a class static field and return that
-        def getter = createMethod("getLabels", listString, new ReturnStatement(names))
+    private void addSchemaProperty(ClassNode nodeClass) {
+        def schemaType = ClassHelper.makeCached(NodeSchema)
+        def schemaValue = new ConstructorCallExpression(schemaType, new ArgumentListExpression(new ClassExpression(nodeClass)))
+        nodeClass.addField("schema", ACC_PRIVATE | ACC_STATIC | ACC_FINAL, schemaType, schemaValue)
+        def getter = createMethod("getSchema", schemaType, new ReturnStatement(var("schema")), ACC_PUBLIC | ACC_STATIC)
         nodeClass.addMethod(getter)
-    }
-
-    private ListExpression labelNames(ClassNode nodeClass, AnnotationNode atNode) {
-        def members = atNode.members
-        List<String> names
-
-        if (members.isEmpty()) {
-            names = [nodeClass.nameWithoutPackage]
-        }
-
-        def expr = members["labels"]
-        if (names == null && expr instanceof ConstantExpression) {
-            names = [expr.value]
-        }
-        if (names == null) {
-            def list = expr as ListExpression
-            names = list.expressions.collect { it.value }
-        }
-        return new ListExpression(names.collect { new ConstantExpression(it) })
     }
 
 }

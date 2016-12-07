@@ -8,17 +8,17 @@ class ReflectionTest {
     @Test
     def void testMappedProperties() {
         def groovy = Reflection.mappedProperties(GroovyProperties)
-        assert groovy.contains("mapped")
-        assert !groovy.contains("unmapped")
+        assert groovy.any { it.name == "mapped" }
+        assert !groovy.any { it.name == "unmapped" }
     }
 
     @Test
     def void testMappedPropertiesCustomAccessors() {
         def javaBeans = Reflection.mappedProperties(JavaBeanProperties)
-        assert javaBeans.contains("mapped")
-        assert !javaBeans.contains("field")
-        assert !javaBeans.contains("getter")
-        assert !javaBeans.contains("setter")
+        assert javaBeans.any { it.name == "mapped" }
+        assert !javaBeans.any { it.name == "field" }
+        assert !javaBeans.any { it.name == "getter" }
+        assert !javaBeans.any { it.name == "setter" }
     }
 
     @Test

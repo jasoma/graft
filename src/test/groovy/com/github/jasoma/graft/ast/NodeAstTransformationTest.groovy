@@ -1,5 +1,7 @@
 package com.github.jasoma.graft.ast
 
+import org.codehaus.groovy.control.MultipleCompilationErrorsException
+import org.codehaus.groovy.control.messages.SyntaxErrorMessage
 import org.junit.Test
 
 class NodeAstTransformationTest extends GroovyTestCase {
@@ -10,6 +12,7 @@ class NodeAstTransformationTest extends GroovyTestCase {
             import com.github.jasoma.graft.Node
             import com.github.jasoma.graft.EntityState
             import com.github.jasoma.graft.ast.EntityProxy
+            import com.github.jasoma.graft.internal.NodeSchema
 
             @Node
             class MyNode { }
@@ -20,6 +23,8 @@ class NodeAstTransformationTest extends GroovyTestCase {
             assert n.modifiedProperties instanceof Set
             assert n.modifiedProperties.empty
             assert n.state == EntityState.Unsaved
+            assert n.schema instanceof NodeSchema
+            assert MyNode.schema instanceof NodeSchema
         '''
     }
 
@@ -107,41 +112,48 @@ class NodeAstTransformationTest extends GroovyTestCase {
     }
 
     @Test
-    def void testDefaultLabels() {
+    def void testExplicitCtor() {
         assertScript '''
             import com.github.jasoma.graft.Node
 
             @Node
-            class MyNode { }
+            class MyNode {
+                MyNode() {}
+            }
 
-            def n = new MyNode()
-            assert n.labels == ["MyNode"]
+            new MyNode()
         '''
     }
 
     @Test
-    def void testCustomLabel() {
-        assertScript '''
-            import com.github.jasoma.graft.Node
+    def void testMissingNoArgsCtor() {
+        try {
+            assertScript '''
+                import com.github.jasoma.graft.Node
 
-            @Node(labels = "Foo")
-            class MyNode { }
+                @Node
+                class MyNode {
+                    MyNode(int foo) {}
+                }
 
-            def n = new MyNode()
-            assert n.labels == ["Foo"]
-        '''
+                new MyNode(1)
+            '''
+        }
+        catch (MultipleCompilationErrorsException e) {
+            // don't want to smother other syntax errors so check for the message
+            boolean found = false
+            for (def error : e.errorCollector.errors) {
+                if (error instanceof SyntaxErrorMessage) {
+                    def inner = error.cause
+                    if (inner.message.contains("no default constructor")) {
+                        found = true
+                    }
+                }
+            }
+            if (!found) {
+                throw e
+            }
+        }
     }
 
-    @Test
-    def void testCustomLabels() {
-        assertScript '''
-            import com.github.jasoma.graft.Node
-
-            @Node(labels = ["Foo", "Bar"])
-            class MyNode { }
-
-            def n = new MyNode()
-            assert n.labels == ["Foo", "Bar"]
-        '''
-    }
 }
